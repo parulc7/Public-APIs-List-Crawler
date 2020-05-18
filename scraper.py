@@ -1,4 +1,5 @@
 # Importing Required Packages
+import functools
 import aiohttp
 import attr
 import logging
@@ -30,6 +31,7 @@ class Fetch:
     # Attributes as defined under attr package
     limit = attr.ib()
     rate = attr.ib(default=5, converter=int)
+    token_expiration_time = None
 
     async def getToken(self):
         "Function to get the Authentication Token"
@@ -51,6 +53,9 @@ class Fetch:
         except json.decoder.JSONDecodeError:
             print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
             exit()
+        else:
+            self.token_expiration_time = time.time()+299
+
 
     async def getList(self, session, num, categories):
         "Recursive Function to get all pages of the list of all Categories of APIs"
@@ -59,8 +64,6 @@ class Fetch:
             try:
                 # Log the Request
                 status = response.status
-                if(status==403)
-                    await self.timeoutHandler()
                 log.info(f"Made Request : {url}, Status : {status}")
                 # Get the JSON data and extract the Categories Array
                 json = await response.json()
@@ -77,7 +80,7 @@ class Fetch:
             except aiohttp.client_exceptions.ContentTypeError:
                 print(f"Error Locating the API Enpoint...\nPlease Check the URLs Again!!")
                 exit()
-
+    
     async def getCategoryContents(self, session, num, category, current):
         "Recursive Function to fetch all pages of the API Endpoints within each Category"
         url=BASE_URL+'apis/entry?page='+str(num)+'&category='+quote(str(category))
@@ -85,8 +88,6 @@ class Fetch:
             try:
                 #Log the request
                 status = response.status
-                if(status==403):
-                    await self.timeoutHandler()
                 log.info(f"Made Request : {url} , Status : {status}")
                 # Extract the category list and return the obtained JSON data
                 json_data = await response.json()
@@ -104,7 +105,7 @@ class Fetch:
                 print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
                 exit()
 
-    async def request(self, url):
+    async def request(self):
         # Only make "Limit" number of Requests per minute (here 10 allowed) - 0 based index
         async with self.limit:
             # Get Authentication Token
@@ -141,7 +142,7 @@ async def main(url, rate, limit):
     # Create an Instance of Fetch Object
     f = Fetch(rate=rate, limit=limit)
     # Run the Request Function to execute the Scraper
-    results = json.dumps(await f.request(url=url), indent=4)
+    results = json.dumps(await f.request(), indent=4)
     # Return Results as JSON Object
     print(results)
 
