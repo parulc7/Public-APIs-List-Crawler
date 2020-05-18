@@ -31,9 +31,10 @@ class Fetch:
     limit = attr.ib()
     rate = attr.ib(default=5, converter=int)
 
-    async def getToken(self, url):
+    async def getToken(self):
         "Function to get the Authentication Token"
         "Since getting a token is an individual request, including it in the session is not a smart decision"
+        url = BASE_URL+'auth/token/'
         try:
             # Create a request for Authentication Token using urllib3
             http = urllib3.PoolManager()
@@ -51,32 +52,54 @@ class Fetch:
             print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
             exit()
 
-    async def getList(self, session, url):
-        "Function to get the list of all the Categories of APIs"
+    async def getList(self, session, num, categories):
+        "Recursive Function to get all pages of the list of all Categories of APIs"
+        url = BASE_URL+'apis/categories?page='+str(num)
         async with session.get(url) as response:
             try:
                 # Log the Request
                 status = response.status
+                if(status==403)
+                    await self.timeoutHandler()
                 log.info(f"Made Request : {url}, Status : {status}")
                 # Get the JSON data and extract the Categories Array
                 json = await response.json()
-                categories = json['categories']
-                print("Categories List Retrieved!!\n")
-                return categories
+                val = json['categories']
+                # Base Case for the Recursive Calls to end
+                if(len(val)==0):
+                    return
+                # Append the newly obtained data to the list of already obtained data
+                categories+=val
+                # Throttle the next request
+                await asyncio.sleep(self.rate)
+                # Recursive call to get the next page
+                await self.getList(session, num+1, categories)
             except aiohttp.client_exceptions.ContentTypeError:
                 print(f"Error Locating the API Enpoint...\nPlease Check the URLs Again!!")
                 exit()
 
-    async def getCategoryContents(self, session, url):
-        "Function to fetch the API Endpoints within each Category"
+    async def getCategoryContents(self, session, num, category, current):
+        "Recursive Function to fetch all pages of the API Endpoints within each Category"
+        url=BASE_URL+'apis/entry?page='+str(num)+'&category='+quote(str(category))
         async with session.get(url) as response:
             try:
                 #Log the request
                 status = response.status
-                log.info(f"Made Request : {url}, Status : {status}")
-                # Return the obtained JSON data
+                if(status==403):
+                    await self.timeoutHandler()
+                log.info(f"Made Request : {url} , Status : {status}")
+                # Extract the category list and return the obtained JSON data
                 json_data = await response.json()
-                return json_data
+                category_contents = json_data['categories']
+                # Base Case for Recursive Call to end
+                if(len(category_contents)==0):
+                    return
+                # Append the newly obtained data to the already existing data
+                current+=category_contents
+                # Throttle the next request
+                await asyncio.sleep(self.rate)
+                # Recursive call to get the next page
+                await self.getCategoryContents(session, num+1, category, current)
             except aiohttp.client_exceptions.ContentTypeError:
                 print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
                 exit()
@@ -85,34 +108,32 @@ class Fetch:
         # Only make "Limit" number of Requests per minute (here 10 allowed) - 0 based index
         async with self.limit:
             # Get Authentication Token
-            authToken = await self.getToken(BASE_URL+'auth/token/')
+            authToken = await self.getToken()
             # Start the Client Session and pass the Authentication Token Data in the Header
             async with aiohttp.ClientSession(headers={"Authorization":"bearer "+authToken}) as session:
                 # Output Object
                 result = {}
-
-                # Iterate over all the pages
-                for page_number in range(1,6):
-                    # Get the Category list on Each Page
-                    categories = await (self.getList(session, BASE_URL+'apis/categories?page='+str(page_number)))
-                    # Sleep to maintain the rate limit
+                categories = []
+                # Get the Category list on Each Page
+                await self.getList(session, 1, categories)
+                # Throttle next request to maintain the rate limit
+                await asyncio.sleep(self.rate)
+                # For every category in the categories list, get the category api contents 
+                for category in categories:
+                    current = []
+                    # Fills the current api category list
+                    await self.getCategoryContents(session, 1, category, current)
+                    # Throttle the next request to maintain the rate limit
                     await asyncio.sleep(self.rate)
-                    # For every category in the category page
-                    for category in categories:
-                        # If we have not encoutered an invalid/empty category
-                        if category is not None:
-                            # Get the Contents (API Endpoint) belonging to the category
-                            url = BASE_URL+'apis/entry?page=1&category='+quote(category)
-                            current = await self.getCategoryContents(session, url)
-                            # Insert the returned Object in to the output object
-                            print(current['categories'])
-                            print("\n")
-                            # Sleep to maintain the rate limit
-                            await asyncio.sleep(self.rate)
-                        else:
-                            # If the category is NULL
-                            break
+                    # Insert (category, apiList) pair into the result object
+                    result[category] = current
                 return result
+
+
+
+
+
+
 
 async def main(url, rate, limit):
     # Definition of Semaphore - To share the rate of request made every minute
@@ -123,6 +144,9 @@ async def main(url, rate, limit):
     results = json.dumps(await f.request(url=url), indent=4)
     # Return Results as JSON Object
     print(results)
+
+
+
 
 # perf_counter is used for measuring time for calculation
 time_before = time.perf_counter()

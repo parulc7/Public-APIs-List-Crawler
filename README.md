@@ -11,4 +11,24 @@
 4. Now, open another terminal window in your repository and run `sudo docker build -t apiCrawler` to build the application using Docker.
 5. To run the Docker image now, execute `sudo docker run apiCrawler` 
 
+## Schema Details of the Database
+
+
+## Delieverables - What have I achieved?
+
+- [] Object Oriented
+- [] Support for Authentication
+- [] Support for Pagination
+- [] Support for Rate Limiting
+- [] Crawls all Entries for all Categories
+
+## Delieverables - What have I not achieved?
+- [] Support for Token Expiration -> I can't figure out a way to replace the old token with the new and resume the tasks from where it stopped. I thought about using a task queue for the same.
+
+## What would I have improved on if given more days?
+
+- Modularizing the Code
+- Letting user give the inputs so that the scraper can be used like a Framework
+
+
 #### Made with Love by Parul Chandel! 
