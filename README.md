@@ -16,14 +16,14 @@
 
 ## Delieverables - What have I achieved?
 
-- [] Object Oriented
-- [] Support for Authentication
-- [] Support for Pagination
-- [] Support for Rate Limiting
-- [] Crawls all Entries for all Categories
+- [x] Object Oriented
+- [x] Support for Authentication
+- [x] Support for Pagination
+- [x] Support for Rate Limiting
+- [x] Crawls all Entries for all Categories
 
 ## Delieverables - What have I not achieved?
-- [] Support for Token Expiration -> I can't figure out a way to replace the old token with the new and resume the tasks from where it stopped. I thought about using a task queue for the same.
+- [ ] Support for Token Expiration -> I can't figure out a way to replace the old token with the new and resume the tasks from where it stopped. I thought about using a task queue for the same.
 
 ## What would I have improved on if given more days?
 
