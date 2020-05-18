@@ -1,0 +1,7 @@
+attr
+async-timeout
+chardet
+multidict
+yarl
+aiohttp
+urllib3
