@@ -14,6 +14,8 @@
 ## Schema Details of the Database
 
 
+
+
 ## Delieverables - What have I achieved?
 
 - [x] Object Oriented
@@ -21,9 +23,11 @@
 - [x] Support for Pagination
 - [x] Support for Rate Limiting
 - [x] Crawls all Entries for all Categories
+- [x] Support for Token Expiration
+
 
 ## Delieverables - What have I not achieved?
-- [ ] Support for Token Expiration -> I can't figure out a way to replace the old token with the new and resume the tasks from where it stopped. I thought about using a task queue for the same.
+
 
 ## What would I have improved on if given more days?
 
