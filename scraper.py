@@ -111,7 +111,8 @@ class Fetch:
             # Get Authentication Token
             authToken = await self.getToken()
             # Start the Client Session and pass the Authentication Token Data in the Header
-            async with aiohttp.ClientSession(headers={"Authorization":"bearer "+authToken}) as session:
+            session = aiohttp.ClientSession(headers={"Authorization":"bearer "+authToken})
+            async with session:
                 # Output Object
                 result = {}
                 categories = []
