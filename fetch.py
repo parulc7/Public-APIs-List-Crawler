@@ -36,88 +36,100 @@ class Fetch:
         "Since getting a token is an individual request, including it in the session is not a smart decision"
         url = BASE_URL+'auth/token/'
         try:
-            # Create a request for Authentication Token using urllib3
-            http = urllib3.PoolManager()
-            response = http.request('GET', url)
-            # Log the Actions
-            status = response.status
-            log.info(f"Made Request : {url}, Status : {status}")
-            # Decode the obtained JSON token
-            json_data = json.loads(response.data.decode('utf-8'))
-            # Extract the token value and return it
-            token_data = json_data["token"]
-            print("Connection to the API established!!\n")
-            return token_data
-
-        except json.decoder.JSONDecodeError:
-            print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
+            response = await requests.get(url=url)
+        except requests.exceptions.ConnectionError as e:
+            print("Unable to connect to the API!!\n Please make sure your are connected to the internet or check the URLs again..\n")
+            print(e)
             exit()
+        else:
+            try:
+                # Log the Actions
+                status = response.status_code
+                log.info(f"Made Request : {url}, Status : {status}")
+                # Decode the obtained JSON token
+                json_data = response.json()
+                # Extract the token value and return it
+                token_data = json_data["token"]
+                print("Token Received!\n\nConnection to the API established!!\n")
+                return token_data
+
+            except json.decoder.JSONDecodeError:
+                print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
+                exit()
 
 
     async def getList(self, session, num, categories):
         "Recursive Function to get all pages of the list of all Categories of APIs"
         url = BASE_URL+'apis/categories?page='+str(num)
-        response = await session.get(url)
-        status = int(response.status_code)
-        if(status!=200):
-            if(status==429):
-                print(response.headers)
-                await asyncio.sleep(60)
-            TOKEN = await self.getToken()
-            session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
-            await self.getList(session, num, categories)
+        try:
+            response = await session.get(url)
+        except requests.exceptions.ConnectionError as e:
+            print("Unable to connect to the API!!\n Please make sure your are connected to the internet or check the URLs again..\n")
+            print(e)
+            exit()
         else:
-            try:
-                # Log the Request
-                log.info(f"Made Request : {url}, Status : {status}")
-                # Get the JSON data and extract the Categories Array
-                json = response.json()
-                val = json['categories']
-                # Base Case for the Recursive Calls to end
-                if(len(val)==0):
-                    return
-                # Append the newly obtained data to the list of already obtained data
-                categories+=val
-                # Throttle the next request
-                await asyncio.sleep(self.rate)
-                # Recursive call to get the next page
-                await self.getList(session, num+1, categories)
-            except aiohttp.client_exceptions.ContentTypeError:
-                print(f"Error Locating the API Enpoint...\nPlease Check the URLs Again!!")
-                exit()
+            status = int(response.status_code)
+            if(status!=200):
+                if(status==429):
+                    await asyncio.sleep(20)
+                TOKEN = await self.getToken()
+                session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                await self.getList(session, num, categories)
+            else:
+                try:
+                    # Log the Request
+                    log.info(f"Made Request : {url}, Status : {status}")
+                    # Get the JSON data and extract the Categories Array
+                    json = response.json()
+                    val = json['categories']
+                    # Base Case for the Recursive Calls to end
+                    if(len(val)==0):
+                        return
+                    # Append the newly obtained data to the list of already obtained data
+                    categories+=val
+                    # Throttle the next request
+                    await asyncio.sleep(self.rate)
+                    # Recursive call to get the next page
+                    await self.getList(session, num+1, categories)
+                except aiohttp.client_exceptions.ContentTypeError:
+                    print(f"Error Locating the API Enpoint...\nPlease Check the URLs Again!!")
+                    exit()
     
     async def getCategoryContents(self, session, num, category, current):
         "Recursive Function to fetch all pages of the API Endpoints within each Category"
         url=BASE_URL+'apis/entry?page='+str(num)+'&category='+quote(str(category))
-        response = await session.get(url)
-        status = int(response.status_code)
-        print(response, type(response))
-        if(status!=200):
-            if(status==429):
-                print(response.headers)
-                await asyncio.sleep(60)
-            TOKEN = await self.getToken()
-            session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
-            await self.getCategoryContents(session, num, category, current)
+        try:
+            response = await session.get(url)
+        except requests.exceptions.ConnectionError as e:
+            print("Unable to connect to the API!!\n Please make sure your are connected to the internet or check the URLs again..\n")
+            print(e)
         else:
-            try:
-                #Log the request
-                log.info(f"Made Request : {url} , Status : {status}")
-                # Extract the category list and return the obtained JSON data
-                json_data = response.json()
-                category_contents = json_data['categories']
-                # Base Case for Recursive Call to end
-                if(len(category_contents)==0):
-                    return
-                # Append the newly obtained data to the already existing data
-                current+=category_contents
-                # Throttle the next request
-                await asyncio.sleep(self.rate)
-                # Recursive call to get the next page
-                await self.getCategoryContents(session, num+1, category, current)
-            except aiohttp.client_exceptions.ContentTypeError:
-                print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
-                exit()
+            status = int(response.status_code)
+            if(status!=200):
+                if(status==429):
+                    await asyncio.sleep(20)
+                TOKEN = await self.getToken()
+                session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                await self.getCategoryContents(session, num, category, current)
+            else:
+                try:
+                    #Log the request
+                    log.info(f"Made Request : {url} , Status : {status}")
+                    # Extract the category list and return the obtained JSON data
+                    json_data = response.json()
+                    category_contents = json_data['categories']
+                    # Base Case for Recursive Call to end
+                    if(len(category_contents)==0):
+                        return
+                    # Append the newly obtained data to the already existing data
+                    current+=category_contents
+                    # Throttle the next request
+                    await asyncio.sleep(self.rate)
+                    # Recursive call to get the next page
+                    await self.getCategoryContents(session, num+1, category, current)
+                except aiohttp.client_exceptions.ContentTypeError:
+                    print(f"Error Locating the API Endpoint...\nPlease Check the URLs Again!!")
+                    exit()
 
     async def request(self):
         # Only make "Limit" number of Requests per minute (here 10 allowed) - 0 based index
