@@ -4,4 +4,4 @@ ADD scraper.py /
 COPY . /
 WORKDIR /
 RUN pip3 install -r requirements.txt
-CMD [ "python3", "./scraper.py", "&&" , "python3", "./db.py"]
+CMD [ "python3", "./scraper.py"]

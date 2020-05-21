@@ -77,12 +77,12 @@ class Fetch:
                 # If too many requests, sleep
                 if(status==429):
                     await asyncio.sleep(20)
-                # Get a new token
-                TOKEN = await self.getToken()
-                # Update the token details in the headers
-                session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
-                # Recursive call to get the list
-                await self.getList(session, num, categories)
+                if(status==403 | status==429):
+                    # Get a new token
+                    TOKEN = await self.getToken()
+                    # Update the token in the session header
+                    session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                    await self.getList(session, num, categories)
             else:
                 # If we get status-code == 200
                 try:
@@ -124,12 +124,13 @@ class Fetch:
                 # If status code is 429 i.e. too many requests, sleep for some time
                 if(status==429):
                     await asyncio.sleep(20)
-                # Get a new token
-                TOKEN = await self.getToken()
-                # Update the token in the session header
-                session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
-                # restart the last function call
-                await self.getCategoryContents(session, num, category, current)
+                if(status==403 | status==429):
+                    # Get a new token
+                    TOKEN = await self.getToken()
+                    # Update the token in the session header
+                    session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                    # restart the last function call
+                    await self.getCategoryContents(session, num, category, current)
             else:
                 # If status code is 200
                 try:
