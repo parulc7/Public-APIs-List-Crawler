@@ -15,11 +15,10 @@ LIMIT = 9
 # Calculate rate of sending requests - approximate delay after which next request must be sent
 RATE = 60/(LIMIT+1)
 
+# The global results object to store and return the extracted data
 results = {}
-# The main Fetch Class
-# attrs package - allows us to write class descriptions without following the standard object protocols(dunder methods)
-# and writes the __repr__ function for us
 
+# Main Function
 async def main(rate, limit):
     # Definition of Semaphore - To share the rate of request made every minute
     limit = asyncio.Semaphore(limit)
@@ -27,9 +26,10 @@ async def main(rate, limit):
     f = fetch.Fetch(rate=rate, limit=limit)
     # Run the Request Function to execute the Scraper
     results = await f.request()
-    # results = json.dumps(await f.request(), indent=4)
-    # Return Results as JSON Object
+
+    # Create the results object
     results = {"database":results}
+    # Write the results object to data.json file
     with open('./data.json', 'w') as json_file:
         json_file.write(json.dumps(results))
 

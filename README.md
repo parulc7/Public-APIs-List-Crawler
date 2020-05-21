@@ -1,8 +1,9 @@
 # Public APIs List Crawler
 
 * Built entirely on Python without using any Scraping Framework
-* Uses the SuperFast Asynchronous Programming Modules for Python -  `asyncio` and `aiohttp`
-* Leverages Semaphores to limit the rate of requests made per minute, thus respecting the Rate Limit set by the Server
+* Uses the SuperFast Asynchronous Modules for Python - `aysncio`, `aiohttp` and `request-sync`
+* Leverages Semaphores to control the rate of requests made per minute, thus respecting the Rate Limit set by the Server
+* Uses `pymongo` to write the json file to a Mongo Database hosted on Mlab, locally stored in `db/crawler_data`
 
 ## Details
 
@@ -15,7 +16,8 @@
 2. Open a Terminal Window in the Repository Folder. Make sure you have Docker installed locally on your system beforehand.
 3. Run the Docker Daemon using `sudo dockerd` in a Terminal Window.
 4. Now, open another terminal window in your repository and run `sudo docker build -t <image_name> .` to build the application using Docker.
-5. To run the Docker image now, execute `sudo docker run -it --rm <image_name>` 
+5. To run the Docker image now, execute `sudo docker run <image_name>`
+6. The data will be saved to `data.json` and the database image on MLab whose copy is stored in `db/crawler_data` as a BSON File. 
 
 ## Schema Details of the Database
 

@@ -15,6 +15,7 @@ LIMIT = 9
 # Calculate rate of sending requests - approximate delay after which next request must be sent
 RATE = round(60/(LIMIT+1))
 
+# Global Token object
 TOKEN = {}
 
 
@@ -60,22 +61,30 @@ class Fetch:
 
     async def getList(self, session, num, categories):
         "Recursive Function to get all pages of the list of all Categories of APIs"
+
+        # URL for the category list
         url = BASE_URL+'apis/categories?page='+str(num)
+        # Get response and if error occurs
         try:
             response = await session.get(url)
         except requests.exceptions.ConnectionError as e:
             print("Unable to connect to the API!!\n Please make sure your are connected to the internet or check the URLs again..\n")
             print(e)
-            exit()
         else:
+            # Check if status is not 200
             status = int(response.status_code)
             if(status!=200):
+                # If too many requests, sleep
                 if(status==429):
                     await asyncio.sleep(20)
+                # Get a new token
                 TOKEN = await self.getToken()
+                # Update the token details in the headers
                 session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                # Recursive call to get the list
                 await self.getList(session, num, categories)
             else:
+                # If we get status-code == 200
                 try:
                     # Log the Request
                     log.info(f"Made Request : {url}, Status : {status}")
@@ -97,21 +106,32 @@ class Fetch:
     
     async def getCategoryContents(self, session, num, category, current):
         "Recursive Function to fetch all pages of the API Endpoints within each Category"
+
+        # URL for the function call
         url=BASE_URL+'apis/entry?page='+str(num)+'&category='+quote(str(category))
+        # Make a request and proceed furthur only if status code 200 is recieved
         try:
             response = await session.get(url)
         except requests.exceptions.ConnectionError as e:
+            # If error occurs while polling the server return the error and exit
             print("Unable to connect to the API!!\n Please make sure your are connected to the internet or check the URLs again..\n")
             print(e)
+            exit()
         else:
+            # Check for status code 200
             status = int(response.status_code)
             if(status!=200):
+                # If status code is 429 i.e. too many requests, sleep for some time
                 if(status==429):
                     await asyncio.sleep(20)
+                # Get a new token
                 TOKEN = await self.getToken()
+                # Update the token in the session header
                 session.headers.update({"Authorization":"Bearer= "+str(TOKEN)})
+                # restart the last function call
                 await self.getCategoryContents(session, num, category, current)
             else:
+                # If status code is 200
                 try:
                     #Log the request
                     log.info(f"Made Request : {url} , Status : {status}")
