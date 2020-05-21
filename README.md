@@ -77,7 +77,6 @@ I have successfully tried to achieve all the required targets.
 
 ## What would I have improved on if given more days?
 
-- Designing a mechanism for making requests in random intervals while throttling (as a good practice, not needed neccessarily in this case)
 -  Migrating the code to Node.js to leverage JavaScript's default Asynchronous Behaviour without using any external libraries (requires in-depth knowledge of Node.js on my part. Hence Python xD)
 
 #### Made with Love by Parul Chandel! 
