@@ -53,8 +53,9 @@ database Object -> Category Name -> Array of APIs(Name, Description, Auth, HTTPS
             {
 
             }
-            .
-            .
+            {
+            
+            }
         ]
     }
 }
